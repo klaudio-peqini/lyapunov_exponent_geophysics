@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "lyapunov-geophys-timeseries"
+type: software
+authors:
+  - family-names: "YourFamilyName"
+    given-names: "YourGivenName"
+    orcid: "https://orcid.org/0000-0000-0000-0000"
+repository-code: "https://github.com/<your-org-or-user>/lyapunov-geophys-timeseries"
+abstract: "Repository scaffold for estimating Lyapunov exponents from geophysical time series."
+license: MIT
+date-released: "2026-02-24"
+keywords:
+  - Lyapunov exponent
+  - nonlinear time series
+  - geophysics
+  - geomagnetism
+  - seismology
