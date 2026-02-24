@@ -1,4 +1,4 @@
-# lyapunov-geophys-timeseries
+# lyapunov-exponent-geophysics
 
 A small, research-friendly repository template to **estimate Lyapunov exponents from geophysical time series**
 (e.g., geomagnetic, seismic, hydrologic, atmospheric).
