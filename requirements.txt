@@ -1,0 +1,13 @@
+# Core scientific stack (adjust once your estimator code is added)
+numpy>=1.24
+scipy>=1.10
+pandas>=2.0
+
+# Optional but common for time-series / nonlinear dynamics
+# nolds>=0.6.0
+# nolitsa>=0.1.2
+
+# Dev / QA
+pytest>=7.4
+ruff>=0.5
+pre-commit>=3.5
