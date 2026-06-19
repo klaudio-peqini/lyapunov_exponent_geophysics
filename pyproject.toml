@@ -3,41 +3,27 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "lyapunov-geophys-timeseries"
-version = "0.1.0"
-description = "Lyapunov exponent estimation for geophysical time series (scaffold)."
+name = "lyapunov-exponent-geophysics"
+version = "0.2.0"
+description = "Lyapunov exponent estimation and comparison for geophysical time series."
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
-authors = [
-  {name = "Your Name", email = "your.email@example.com"}
-]
-keywords = ["Lyapunov", "time series", "nonlinear dynamics", "geophysics", "geomagnetism", "seismology"]
+authors = [{name = "Klaudio Peqini"}]
+keywords = ["Lyapunov exponent", "geophysics", "time series", "chaos", "nonlinear dynamics"]
 classifiers = [
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3 :: Only",
   "License :: OSI Approved :: MIT License",
-  "Operating System :: OS Independent",
   "Intended Audience :: Science/Research",
   "Topic :: Scientific/Engineering :: Physics",
 ]
+dependencies = ["numpy>=1.24", "scipy>=1.10", "pandas>=2.0", "matplotlib>=3.7"]
 
-dependencies = [
-  "numpy>=1.24",
-  "scipy>=1.10",
-  "pandas>=2.0",
-  "matplotlib>=3.7",
-]
 [project.optional-dependencies]
-dev = [
-  "pytest>=7.4",
-  "ruff>=0.5",
-  "pre-commit>=3.5",
-]
-
+dev = ["pytest>=7.4", "ruff>=0.5", "pre-commit>=3.5"]
 
 [project.scripts]
-lyapgeo = "lyapunov_geo.cli:main"
+lyapgeo = "lyapgeo.cli:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
@@ -56,7 +42,3 @@ target-version = "py310"
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "N", "SIM"]
 ignore = ["E501"]
-
-[tool.ruff.format]
-quote-style = "double"
-indent-style = "space"

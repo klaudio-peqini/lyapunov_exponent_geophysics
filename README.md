@@ -1,18 +1,20 @@
-# lyapunov-geophys-timeseries
+# lyapunov-exponent-geophysics
 
-A small, research-friendly repository to **estimate Lyapunov exponents from geophysical time series**
-(geomagnetic, seismic, hydrologic, atmospheric) and to reproduce benchmark *bifurcation + Lyapunov* plots
-for classic maps.
+Professional Python toolkit for estimating Lyapunov exponents from geophysical time series.
 
-This repo is adapted from your original scripts:
-- `bifurcation_diagram.py` fileciteturn0file0
-- `bifurcation_Lorenz_system.py` fileciteturn0file1
-- `radon_processing.py` fileciteturn0file2
-- `signal_processing_tests.py` fileciteturn0file3
+The repository provides:
 
----
+- a fast **local-neighbor estimator** inspired by the original simple approach;
+- a **Rosenstein-style largest Lyapunov exponent** estimator;
+- a **Kantz-style divergence estimator**;
+- local slope distributions with **optimized histogram/PDF estimation**;
+- final estimates with **bootstrap 95% confidence intervals**;
+- command-line workflows for reproducible analysis;
+- benchmark tools for logistic-map validation.
 
-## Install
+The main idea is not to trust one number from one algorithm. Instead, the package compares several estimators and reports both global and local information.
+
+## Installation
 
 ```bash
 python -m venv .venv
@@ -20,86 +22,122 @@ source .venv/bin/activate
 pip install -U pip
 pip install -r requirements.txt
 pip install -e .
+pytest
 ```
 
----
-
-## CLI (tracklet-style, via argparse)
-
-### 1) Bifurcation + Lyapunov plots (PDF/PNG)
-
-Logistic map (produces a plot similar to your earlier PDFs):
+## Analyze a time series
 
 ```bash
-lyapgeo bifurcation logistic \
-  --r-min 2.8 --r-max 4.0 --dr 0.01 \
-  --x0 0.2 --steps 2000 --last 300 \
-  --eps 0.01 --l 5 --max-pairs 1000 \
-  --out Lyapunov_logistic_map.pdf
+lyapgeo series \
+  --input data/raw/radon.csv \
+  --column-name Radon \
+  --method all \
+  --emb-dim 3 \
+  --tau 2 \
+  --horizon 5 \
+  --fit-start 0 \
+  --fit-end 5 \
+  --theiler 20 \
+  --n-bootstrap 2000 \
+  --outdir results/radon
 ```
 
-Gaussian map:
-
-```bash
-lyapgeo bifurcation gaussian \
-  --alpha 1.0 --beta-min -1.0 --beta-max 1.0 --db 0.01 \
-  --x0 0.2 --steps 2000 --last 300 \
-  --out Lyapunov_gaussian_map.pdf
-```
-
-Logistic-exponential map:
-
-```bash
-lyapgeo bifurcation logexp \
-  --r-min 3.0 --r-max 4.0 --dr 0.01 \
-  --x0 0.2 --steps 2000 --last 300 \
-  --out Lyapunov_logistic_exponential_map.pdf
-```
-
-Each command prints **elapsed time**.
-
-### 2) Lyapunov exponent from a CSV time series
-
-```bash
-lyapgeo series --csv my_timeseries.csv --column-name Bz --eps 0.01 --l 10
-```
-
-(Or `--column 0` for a 0-based index.)
-
-### 3) Lorenz Lyapunov spectrum (QR method)
-
-```bash
-lyapgeo lorenz-lyap --sigma 10 --r 28 --b 2.6666667 --iters 2000 --dt 1.0
-```
-
----
-
-## Your performance concern (fixed)
-
-Your original `lyapunov_exponent()` in `radon_processing.py` uses nested loops over all pairs `(i, j)`
-and becomes slow for long signals. fileciteturn0file2
-
-The new implementation in `src/lyapunov_geo/lyapunov.py` is much faster because it:
-- sorts values once (O(N log N))
-- finds neighbors with a sliding window in 1D (instead of scanning all pairs)
-- limits work with `--max-pairs`
-- uses an O(l) closed-form linear regression for the slope
-
-Tune performance/quality via: `--eps`, `--l`, `--max-pairs`, `--min-separation`.
-
----
-
-## Repo layout
+Outputs:
 
 ```text
-src/lyapunov_geo/
-  cli.py         # argparse entrypoint (lyapgeo)
-  lyapunov.py    # fast series LE estimator
-  maps.py        # logistic / gaussian / logexp
-  bifurcation.py # bifurcation workflows + plotting
-  lorenz.py      # Lorenz Lyapunov spectrum (QR)
-  io.py          # simple CSV loader
+results/radon/
+├─ summary.json
+├─ local_estimates.csv
+├─ pdf_local_estimates.pdf
+├─ divergence_curves.pdf
+└─ method_comparison.pdf
+```
 
-examples/        # your original scripts (kept for reference)
-tests/           # pytest smoke tests
+## Benchmark with the logistic map
+
+```bash
+lyapgeo benchmark-logistic --r 3.9 --n 6000 --discard 1000 --outdir results/logistic_r39
+```
+
+## Implemented estimators
+
+1. **Local-neighbor estimator**: short local divergence windows, useful for PDFs of local Lyapunov estimates.
+2. **Rosenstein estimator**: delay embedding, nearest neighbors, Theiler window, mean log divergence, slope fit.
+3. **Kantz estimator**: neighborhood-averaged divergence using several neighbors per reference state.
+
+For noisy and short geophysical series, a positive exponent should be interpreted cautiously and compared against surrogates and parameter sweeps.
+
+## Radon Eye / FTLAB TXT files without column names
+
+Radon Eye TXT exports are not normal CSV files. They contain a metadata header and data rows like:
+
+```text
+1)  2024-02-08 17:49:17   21   20.5°C   60%
+```
+
+Use the dedicated parser:
+
+```bash
+lyapgeo series \
+  --input "data/raw/PE22111010064_LogData (14) Durres.txt" \
+  --input-format radon-eye \
+  --field radon \
+  --method all \
+  --emb-dim 3 \
+  --tau 2 \
+  --horizon 5 \
+  --fit-start 0 \
+  --fit-end 5 \
+  --theiler 20 \
+  --max-pairs 5000 \
+  --outdir results/radon_durres
+```
+
+Available fields are `radon`, `temperature`, and `humidity`.
+
+## Excel input, for example PADM2M.xlsx
+
+For Excel files with named columns, such as `Age (kyr)` and `RPI`, use:
+
+```bash
+lyapgeo series \
+  --input PADM2M.xlsx \
+  --input-format excel \
+  --sheet Sheet1 \
+  --column-name RPI \
+  --method all \
+  --emb-dim 3 \
+  --tau 2 \
+  --horizon 5 \
+  --fit-start 0 \
+  --fit-end 5 \
+  --theiler 20 \
+  --max-pairs 5000 \
+  --outdir results/PADM2M_RPI
+```
+
+## Direct execution without `lyapgeo`
+
+If your terminal keeps finding an old `lyapgeo` command, run directly:
+
+```bash
+python scripts/run_lyapgeo.py series \
+  --input PADM2M.xlsx \
+  --input-format excel \
+  --sheet Sheet1 \
+  --column-name RPI \
+  --method all \
+  --outdir results/geomagnetic
+```
+
+Equivalent module form:
+
+```bash
+python -m lyapgeo.cli series \
+  --input PADM2M.xlsx \
+  --input-format excel \
+  --sheet Sheet1 \
+  --column-name RPI \
+  --method all \
+  --outdir results/geomagnetic
 ```
