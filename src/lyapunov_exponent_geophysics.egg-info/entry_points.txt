@@ -1,0 +1,2 @@
+[console_scripts]
+lyapgeo = lyapgeo.cli:main
