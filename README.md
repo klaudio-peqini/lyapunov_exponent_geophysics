@@ -1,4 +1,4 @@
-# lyapunov-exponent-geophysics                        
+# lyapunov-exponent-geophysics                         
 
 Professional Python toolkit for estimating Lyapunov exponents from geophysical time series.
 
